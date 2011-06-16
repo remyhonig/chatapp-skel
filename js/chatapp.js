@@ -247,13 +247,18 @@ window.ChatApp.MessageListView = Backbone.View.extend({
 		this.collection.bind('add', function(item) {
 
 			var message = item.get('message');
-			var time = item.get('dateTime').toString();
+			var time = item.get('dateTime');
 			var nickName = item.get('nickName');
+			var gravatar = item.get('gravatar');
+			
+			var date = new Date(time);
+			var formattedDate = date.toLocaleTimeString();
 			
 			var dom = self.$('.template').clone();
 			dom.find('.nickName').text(nickName);
-			dom.find('time').text(time);
+			dom.find('time').text(formattedDate);
 			dom.find('p').text(message);
+		    dom.css({backgroundImage: "url('"+ gravatar +"?s=25&d=retro');"});
 
 			dom.appendTo(self.el).removeClass('template');
 		});
@@ -310,8 +315,9 @@ window.ChatApp.UserListView = Backbone.View.extend({
 	     var userTemplateDiv = this.$('.template');
 	     var userTemplate = userTemplateDiv.clone();
 	     userTemplate.removeClass('template');
-	     userTemplate.text(user.get('nickName'));
+	     userTemplate.find('span').text(user.get('nickName'));
 	     userTemplate.attr('class', 'nick-' + user.get('nickName'));
+	     userTemplate.attr('style','background-image: url("'+ user.get('gravatar') +'?s=25&d=retro");');
 	     this.el.append(userTemplate);
 	 },
 
