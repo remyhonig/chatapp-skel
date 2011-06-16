@@ -240,7 +240,24 @@ window.ChatApp.parseISO8601 = function(str) {
  * MessageCollection
  */
 window.ChatApp.MessageListView = Backbone.View.extend({
-  
+	
+	initialize : function() {
+		this.$(this.el).show();
+		var self = this;
+		this.collection.bind('add', function(item) {
+
+			var message = item.get('message');
+			var time = item.get('dateTime').toString();
+			var nickName = item.get('nickName');
+			
+			var dom = self.$('.template').clone();
+			dom.find('.nickName').text(nickName);
+			dom.find('time').text(time);
+			dom.find('p').text(message);
+
+			dom.appendTo(self.el).removeClass('template');
+		});
+	}
 });
 
 
@@ -256,6 +273,15 @@ window.ChatApp.MessageListView = Backbone.View.extend({
  */
 window.ChatApp.MessageInputView = Backbone.View.extend({
 
+    events : {
+        "submit form" : "sendmessage"
+    },
+
+    sendmessage: function(evt) {
+        evt.preventDefault();
+        var msg = this.$('input[name=message]').val();
+        this.options.connection.message(msg);
+    }
 });
     
 /**
@@ -268,7 +294,30 @@ window.ChatApp.MessageInputView = Backbone.View.extend({
  * UserCollection
  */
 window.ChatApp.UserListView = Backbone.View.extend({
+	initialize : function() {
+		this.$(this.el).show();
+		var self = this;
+		
+		this.collection.bind('add', function(item) {
+			self.addUser(item);
+		});
+		this.collection.bind('remove', function(item) {
+			self.removeUser(item);
+		});
+	},
+	
+	addUser : function(user) {
+	     var userTemplateDiv = this.$('.template');
+	     var userTemplate = userTemplateDiv.clone();
+	     userTemplate.removeClass('template');
+	     userTemplate.text(user.get('nickName'));
+	     userTemplate.attr('class', 'nick-' + user.get('nickName'));
+	     this.el.append(userTemplate);
+	 },
 
+	 removeUser : function(user) {
+	     $('.nick-' + user.get('nickName')).remove();
+	 }
 });
 
 /**
@@ -315,8 +364,8 @@ window.ChatApp.Application = Backbone.View.extend({
 
     connection : null,
 
-    nickName : null,
-    email : null,
+    nickName : 'Remy',
+    email : 'rhonig@ibuildings.nl',
 
     el: 'body',
 
@@ -327,8 +376,6 @@ window.ChatApp.Application = Backbone.View.extend({
         this.messageCollection = new ChatApp.MessageCollection();
         this.userCollection = new ChatApp.UserCollection();
 
-
-
         this.welcomeView = new ChatApp.WelcomeView({
             el : this.$('section.welcome')
         });
@@ -337,7 +384,6 @@ window.ChatApp.Application = Backbone.View.extend({
             self.email = userInfo.email;
             self.initializeConnection();
         });
-
     },
 
     initializeConnection : function() {
@@ -356,10 +402,7 @@ window.ChatApp.Application = Backbone.View.extend({
             collection: this.userCollection,
             el: this.$('section.userList')
         });
-
-
     }
-
 });
 
 
@@ -368,7 +411,7 @@ window.ChatApp.Application = Backbone.View.extend({
  * Using jQuery's DOM.ready to fire up the application.
  */
 $(document).ready(function() {
-
-    window.ChatApp.application = new ChatApp.Application;
-
+    var app = new ChatApp.Application;
+    window.ChatApp.application = app;
+    console.log(app);
 });
